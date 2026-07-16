@@ -8,7 +8,6 @@ const uploadNote = async (req, res) => {
             req.file,
             req.user.id
         );
-        console.log("Uploaded file:", req.file);
         res.status(201).json(note);
     } catch (error) {
         console.error(error);
