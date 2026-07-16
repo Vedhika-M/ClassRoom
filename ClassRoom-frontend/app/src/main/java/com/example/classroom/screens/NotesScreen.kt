@@ -44,6 +44,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import java.io.File
 import java.io.FileOutputStream
+import android.content.Intent
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,6 +111,14 @@ fun NotesScreen(
         ) {
             items(notes) { note ->
                 Card(
+                    modifier = Modifier.clickable {
+                        val url = "https://classroom-bs7z.onrender.com/uploads/${note.filePath}"
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(url)
+                        )
+                        context.startActivity(intent)
+                    },
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(
