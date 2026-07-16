@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  CR
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  NO_CLASS
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+
+  announcements Announcement[]
+  polls         Poll[]
+  votes         Vote[]
+  notes         Note[]
+  attendance    AttendanceRecord[]
+
+  @@index([role])
+}
+
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  attendanceSessions AttendanceSession[]
+  notes              Note[]
+  exams              Exam[]
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+}
+
+model Poll {
+  id         Int      @id @default(autoincrement())
+  question   String
+  isClosed   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  options PollOption[]
+  votes   Vote[]
+
+  @@index([createdAt])
+}
+
+model PollOption {
+  id      Int    @id @default(autoincrement())
+  option  String
+
+  pollId Int
+  poll   Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  votes Vote[]
+}
+
+model Vote {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pollId Int
+  poll   Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  optionId Int
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pollId])
+}
+
+model AttendanceSession {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  records AttendanceRecord[]
+
+  @@index([date])
+}
+
+model AttendanceRecord {
+  id     Int              @id @default(autoincrement())
+  status AttendanceStatus
+
+  attendanceSessionId Int
+  attendanceSession   AttendanceSession @relation(fields: [attendanceSessionId], references: [id], onDelete: Cascade)
+
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([attendanceSessionId, studentId])
+}
+
+model Note {
+  id         Int      @id @default(autoincrement())
+  title      String
+  fileName   String
+  filePath   String
+  uploadedAt DateTime @default(now())
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  uploadedById Int
+  uploadedBy   User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([uploadedAt])
+}
+
+model Exam {
+  id        Int      @id @default(autoincrement())
+  examType  String
+  examDate  DateTime
+  examTime  String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([examDate])
+}
